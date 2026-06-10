@@ -1,5 +1,19 @@
 from datetime import datetime
 
+from sqlalchemy import (
+    String,
+    Integer,
+    Boolean,
+    DateTime,
+    ForeignKey
+)
+
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+    relationship
+)
+
 from werkzeug.security import (
     generate_password_hash,
     check_password_hash
@@ -9,32 +23,33 @@ from app.extensions import db
 
 
 class User(db.Model):
-
     __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True
+    )
 
-    username = db.Column(
-        db.String(80),
+    username: Mapped[str] = mapped_column(
+        String(80),
         unique=True,
         nullable=False
     )
 
-    password_hash = db.Column(
-        db.String(255),
+    password_hash: Mapped[str] = mapped_column(
+        String(255),
         nullable=False
     )
 
-    tasks = db.relationship(
-        "Task",
+    tasks: Mapped[list["Task"]] = relationship(
         back_populates="author",
         cascade="all, delete-orphan"
     )
 
-    def set_password(self, password):
+    def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password: str) -> bool:
         return check_password_hash(
             self.password_hash,
             password
@@ -42,38 +57,40 @@ class User(db.Model):
 
 
 class Task(db.Model):
-
     __tablename__ = "tasks"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True
+    )
 
-    title = db.Column(
-        db.String(100),
+    title: Mapped[str] = mapped_column(
+        String(100),
         nullable=False
     )
 
-    description = db.Column(db.String(255))
+    description: Mapped[str | None] = mapped_column(
+        String(255)
+    )
 
-    created_at = db.Column(
-        db.DateTime,
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
         default=datetime.utcnow
     )
 
-    is_completed = db.Column(
-        db.Boolean,
+    is_completed: Mapped[bool] = mapped_column(
+        Boolean,
         default=False
     )
 
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id"),
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
         nullable=False
     )
 
-    author = db.relationship(
-        "User",
+    author: Mapped["User"] = relationship(
         back_populates="tasks"
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Task {self.title}>"
